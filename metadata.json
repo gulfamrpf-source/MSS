@@ -1,0 +1,6 @@
+{
+  "name": "Manav Samanta Sangthan",
+  "description": "NGO Website for Manav Samanta Sangthan",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

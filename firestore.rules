@@ -1,0 +1,130 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Function to check if user is admin
+    function isAdmin() {
+      return request.auth != null && 
+             get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+
+    // Function to check if it's the official super admin emails
+    function isSuperAdminEmail() {
+      return request.auth != null && (request.auth.token.email == 'manavsamantasangthan@gmail.com' || request.auth.token.email == 'gulfamrpf@gmail.com');
+    }
+
+    // Function to check if a document is published
+    function isPublished() {
+      return resource.data.status == 'published';
+    }
+
+    match /users/{userId} {
+      // Anyone can read for public directories (sensitive data should be masked in UI)
+      allow read: if true;
+      // Allow full access to admins or super admins. Allow users to update their own non-sensitive fields.
+      allow write, update, delete: if request.auth != null && (
+                      isAdmin() || 
+                      isSuperAdminEmail() ||
+                      (request.auth.uid == userId)
+                    );
+      allow create: if request.auth != null && request.auth.uid == userId;
+    }
+    
+    match /messages/{docId} {
+      allow create: if true;
+      allow read, update, delete: if isAdmin() || isSuperAdminEmail();
+    }
+    
+    match /policies/{docId} {
+      allow read: if true;
+      allow write: if isAdmin() || isSuperAdminEmail();
+    }
+
+    match /donations/{docId} {
+      allow create: if true; // Anyone can create a donation record
+      allow read, update, delete: if isAdmin() || isSuperAdminEmail();
+    }
+
+    match /applications/{appId} {
+      // Anyone can create an application
+      allow create: if true;
+      // Only admins can view and update applications
+      allow read, update: if isAdmin() || isSuperAdminEmail();
+    }
+    
+    match /profiles/founder {
+      // Anyone can read founder profile
+      allow read: if true;
+      allow write: if isAdmin() || isSuperAdminEmail();
+    }
+
+    match /settings/{docId} {
+      allow read: if true;
+      allow write: if isAdmin() || isSuperAdminEmail();
+    }
+
+    // NGO Management Collections
+    match /activities/{docId} {
+      allow read: if true;
+      allow write: if isAdmin() || isSuperAdminEmail();
+    }
+
+    match /projects/{docId} {
+      allow read: if true;
+      allow write: if isAdmin() || isSuperAdminEmail();
+    }
+
+    match /campaigns/{docId} {
+      allow read: if true;
+      allow write: if isAdmin() || isSuperAdminEmail();
+    }
+
+    match /events/{docId} {
+      allow read: if true;
+      allow write: if isAdmin() || isSuperAdminEmail();
+    }
+
+    match /documents/{docId} {
+      allow read: if true;
+      allow write: if isAdmin() || isSuperAdminEmail();
+    }
+
+    match /pages/{docId} {
+      allow read: if true;
+      allow write: if isAdmin() || isSuperAdminEmail();
+    }
+
+    match /news/{docId} {
+      allow read: if true;
+      allow write: if isAdmin() || isSuperAdminEmail();
+    }
+
+    match /galleries/{docId} {
+      allow read: if true;
+      allow write: if isAdmin() || isSuperAdminEmail();
+    }
+
+    match /beneficiaries/{docId} {
+      // Strictly private
+      allow read, write: if isAdmin() || isSuperAdminEmail();
+    }
+
+    match /audit_logs/{docId} {
+      allow read: if isAdmin() || isSuperAdminEmail();
+      allow create: if isAdmin() || isSuperAdminEmail();
+      allow update, delete: if false; // Immutable logs
+    }
+
+    match /tasks/{taskId} {
+      allow read: if isAdmin() || isSuperAdminEmail() || (request.auth != null && resource.data.assignedToId == request.auth.uid);
+      allow create: if isAdmin() || isSuperAdminEmail();
+      allow update: if isAdmin() || isSuperAdminEmail() || (request.auth != null && resource.data.assignedToId == request.auth.uid);
+      allow delete: if isAdmin() || isSuperAdminEmail();
+    }
+
+    match /{document=**} {
+      // Fallback for development, secure this later
+      allow read, write: if isAdmin() || isSuperAdminEmail();
+    }
+  }
+}
