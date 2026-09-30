@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { collection, query, orderBy, onSnapshot, doc, updateDoc, setDoc, getDoc } from 'firebase/firestore';
+import { collection, query, orderBy, onSnapshot, doc, updateDoc, setDoc, getDoc, where, getDocs } from 'firebase/firestore';
 import { db } from '../../firebase';
 import { Check, X, Eye } from 'lucide-react';
 import { generateId } from '../../utils/idGenerator';
@@ -43,23 +43,37 @@ export default function AdminApplications() {
       // 1. Generate ID
       const newId = await generateId(role === 'officer' ? 'officer' : 'member');
       
+      // Issue Date is EXACTLY the date & time the admin accepts/approves the applicant
       const issueDate = new Date();
       const expiryDate = new Date();
       expiryDate.setFullYear(issueDate.getFullYear() + 1);
 
+      const issueDateIso = issueDate.toISOString();
+      const expiryDateIso = expiryDate.toISOString();
+
       // 2. Update Application status
       await updateDoc(doc(db, 'applications', selectedApp.id), {
         status: 'approved',
-        approvedAt: issueDate,
+        approvedAt: issueDateIso,
+        issueDate: issueDateIso,
+        cardIssueDate: issueDateIso,
+        approvalDate: issueDateIso,
         memberId: role === 'member' ? newId : null,
         officerId: role === 'officer' ? newId : null,
-        roleAssigned: role
+        roleAssigned: role,
+        designationAssigned: role === 'officer' ? designation : 'Member'
       });
 
       // 3. Create/Update User document
-      // We will try to find the user by userId if exists, else by email if we can?
-      // Wait, in Join.tsx we save userId (uid)
-      const targetUid = selectedApp.userId;
+      let targetUid = selectedApp.userId;
+      if (!targetUid && selectedApp.email) {
+        const { getDocs, where } = await import('firebase/firestore');
+        const userQuery = query(collection(db, 'users'), where('email', '==', selectedApp.email));
+        const userSnap = await getDocs(userQuery);
+        if (!userSnap.empty) {
+          targetUid = userSnap.docs[0].id;
+        }
+      }
       
       if (targetUid) {
         const updateData: any = {
@@ -68,19 +82,29 @@ export default function AdminApplications() {
           name: selectedApp.fullName,
           role: role,
           status: 'active',
-          joiningDate: issueDate.toISOString(),
-          validUntil: expiryDate.toISOString(),
+          issueDate: issueDateIso,
+          cardIssueDate: issueDateIso,
+          approvedAt: issueDateIso,
+          approvalDate: issueDateIso,
+          joiningDate: issueDateIso,
+          validUntil: expiryDateIso,
           phone: selectedApp.mobile,
           address: selectedApp.address,
           city: selectedApp.city || '',
           state: selectedApp.state || '',
-          district: selectedApp.district || ''
+          district: selectedApp.district || '',
+          pincode: selectedApp.pincode || '',
+          bloodGroup: selectedApp.bloodGroup || 'A+'
         };
+
+        if (selectedApp.photoUrl) {
+          updateData.photoUrl = selectedApp.photoUrl;
+        }
         
         if (role === 'officer') {
           updateData.officerId = newId;
           updateData.designation = designation;
-          updateData.officerAppointmentDate = issueDate.toISOString();
+          updateData.officerAppointmentDate = issueDateIso;
         } else {
           updateData.memberId = newId;
           updateData.designation = 'Member';
@@ -90,7 +114,7 @@ export default function AdminApplications() {
         await setDoc(doc(db, 'users', targetUid), updateData, { merge: true });
       }
       
-      alert('Application approved successfully!');
+      alert('Application approved successfully! ID Card issued with today\'s date.');
       setShowApproveModal(false);
       setSelectedApp(null);
     } catch (error) {
