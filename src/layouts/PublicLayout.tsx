@@ -37,20 +37,6 @@ export default function PublicLayout() {
         {/* Background Overlay */}
         <div className={`absolute inset-0 z-0 ${settings.headerBgUrl ? 'bg-white/85 backdrop-blur-[2px]' : 'bg-white'}`}></div>
 
-        {/* Marquee Notification Bar (Top Most) */}
-        {settings.notificationText && (
-          <div className="w-full overflow-hidden flex items-center relative z-10 bg-emerald-700 text-white">
-             <div className="w-full overflow-hidden relative py-1.5">
-               <div className="animate-marquee font-medium text-[13px] tracking-wide">
-                 <span className="inline-flex items-center gap-3">
-                   <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span> 
-                   {settings.notificationText}
-                 </span>
-               </div>
-             </div>
-          </div>
-        )}
-
         {/* Main Logo & Action Bar */}
         <div className="w-full px-4 md:px-6 py-4 flex items-center justify-between relative z-10"> 
           <Link to="/" className="flex items-center gap-4 group">
@@ -93,6 +79,20 @@ export default function PublicLayout() {
             )}
           </div>
         </div>
+
+        {/* Marquee Notification Bar (Middle between Head and Menu) */}
+        {settings.notificationText && (
+          <div className="w-full overflow-hidden flex items-center relative z-10 bg-emerald-700 text-white">
+             <div className="w-full overflow-hidden relative py-1.5">
+               <div className="animate-marquee font-medium text-[13px] tracking-wide">
+                 <span className="inline-flex items-center gap-3">
+                   <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span> 
+                   {settings.notificationText}
+                 </span>
+               </div>
+             </div>
+          </div>
+        )}
 
         {/* Professional Navigation Menu Bar */}
         <div className="w-full hidden md:block relative z-10 border-t border-slate-200/50">
