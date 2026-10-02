@@ -11,10 +11,25 @@ export interface UserData {
   name: string;
   role: Role;
   memberId?: string;
+  officerId?: string;
   designation?: string;
   photoUrl?: string;
   status: 'active' | 'suspended' | 'pending';
   joiningDate?: string;
+  issueDate?: string;
+  cardIssueDate?: string;
+  approvedAt?: any;
+  approvalDate?: string;
+  validUntil?: string;
+  officerAppointmentDate?: string;
+  bloodGroup?: string;
+  phone?: string;
+  address?: string;
+  level?: string;
+  state?: string;
+  district?: string;
+  city?: string;
+  isPublic?: boolean;
 }
 
 interface AuthContextType {

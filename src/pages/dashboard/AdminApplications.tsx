@@ -112,9 +112,40 @@ export default function AdminApplications() {
         
         // Use setDoc with merge to create or update the user document
         await setDoc(doc(db, 'users', targetUid), updateData, { merge: true });
+
+        // Automatically generate official Appointment Letter & trigger SMS if officer
+        if (role === 'officer') {
+          try {
+            const { createOfficerAppointmentRecord } = await import('../../utils/appointmentService');
+            const appt = await createOfficerAppointmentRecord({
+              userId: targetUid,
+              officerId: newId,
+              officerName: selectedApp.fullName,
+              officerPhone: selectedApp.mobile,
+              officerEmail: selectedApp.email,
+              designation: designation,
+              level: selectedApp.preferredArea || 'district',
+              state: selectedApp.state || '',
+              district: selectedApp.district || '',
+              address: selectedApp.address || ''
+            });
+
+            if (appt.smsNotification.sent) {
+              alert(`Officer appointed successfully!\n• Officer ID: ${newId}\n• Official Appointment Letter generated\n• SMS Notification delivered to ${selectedApp.mobile}`);
+            } else {
+              alert(`Officer appointed successfully!\n• Officer ID: ${newId}\n• Official Appointment Letter generated\n\n⚠️ SMS Notification Status: ${appt.smsNotification.error || 'Failed to deliver'}. You can check or retry from "Appointment Letters & SMS" section.`);
+            }
+          } catch (apptErr: any) {
+            console.error("Error generating officer appointment letter:", apptErr);
+            alert(`Officer application approved with ID ${newId}. (Appointment letter creation notice: ${apptErr.message})`);
+          }
+        } else {
+          alert('Application approved successfully! ID Card issued with today\'s date.');
+        }
+      } else {
+        alert('Application updated, but user record could not be matched.');
       }
       
-      alert('Application approved successfully! ID Card issued with today\'s date.');
       setShowApproveModal(false);
       setSelectedApp(null);
     } catch (error) {

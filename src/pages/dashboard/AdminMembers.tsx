@@ -53,19 +53,51 @@ export default function AdminMembers() {
       };
 
       if (role === 'officer') {
+        const assignedOfficerId = selectedMember.officerId || await generateId('officer');
+        updateData.officerId = assignedOfficerId;
         updateData.designation = designation || 'Officer';
-        if (!selectedMember.officerId) {
-          updateData.officerId = await generateId('officer');
-          updateData.officerAppointmentDate = new Date().toISOString();
+        const now = new Date();
+        updateData.officerAppointmentDate = now.toISOString();
+        updateData.issueDate = selectedMember.issueDate || now.toISOString();
+        updateData.cardIssueDate = selectedMember.cardIssueDate || now.toISOString();
+
+        await updateDoc(doc(db, 'users', selectedMember.id), updateData);
+
+        // Generate official Appointment Letter and dispatch SMS notification
+        try {
+          const { createOfficerAppointmentRecord } = await import('../../utils/appointmentService');
+          const appt = await createOfficerAppointmentRecord({
+            userId: selectedMember.id,
+            officerId: assignedOfficerId,
+            officerName: selectedMember.name,
+            officerPhone: selectedMember.phone || '',
+            officerEmail: selectedMember.email || '',
+            designation: designation || 'Officer',
+            level: level || '',
+            state: stateValue || '',
+            district: districtValue || '',
+            address: selectedMember.address || ''
+          });
+
+          if (appt.smsNotification.sent) {
+            alert(`Officer nomination updated successfully!\n• Officer ID: ${assignedOfficerId}\n• Official Appointment Letter generated\n• SMS Confirmation delivered to ${selectedMember.phone}`);
+          } else {
+            alert(`Officer nomination updated successfully!\n• Officer ID: ${assignedOfficerId}\n• Official Appointment Letter generated\n\n⚠️ SMS Notification Status: ${appt.smsNotification.error || 'Gateway unconfigured or delivery failed'}. Check "Appointment Letters & SMS" page to retry.`);
+          }
+        } catch (apptErr: any) {
+          console.error("Error generating appointment record:", apptErr);
+          alert('Officer updated successfully!');
         }
       } else if (role === 'admin') {
         updateData.designation = designation || 'Admin';
+        await updateDoc(doc(db, 'users', selectedMember.id), updateData);
+        alert('Member updated successfully!');
       } else {
         updateData.designation = ''; // clear designation if demoted
+        await updateDoc(doc(db, 'users', selectedMember.id), updateData);
+        alert('Member updated successfully!');
       }
 
-      await updateDoc(doc(db, 'users', selectedMember.id), updateData);
-      alert('Member updated successfully!');
       setShowRoleModal(false);
     } catch (error) {
       console.error("Error updating member", error);
@@ -79,10 +111,24 @@ export default function AdminMembers() {
     const actionName = newStatus === 'suspended' ? 'suspend' : 'activate';
     if (!window.confirm(`Are you sure you want to ${actionName} this member?`)) return;
     try {
-      await updateDoc(doc(db, 'users', memberId), {
+      const updateData: any = {
         status: newStatus
-      });
-    } catch (error) {
+      };
+      if (newStatus === 'active') {
+        const targetMember = members.find(m => m.id === memberId);
+        if (!targetMember?.issueDate && !targetMember?.joiningDate) {
+          const now = new Date();
+          const expiryDate = new Date();
+          expiryDate.setFullYear(now.getFullYear() + 1);
+          updateData.issueDate = now.toISOString();
+          updateData.cardIssueDate = now.toISOString();
+          updateData.joiningDate = now.toISOString();
+          updateData.approvedAt = now.toISOString();
+          updateData.validUntil = expiryDate.toISOString();
+        }
+      }
+      await updateDoc(doc(db, 'users', memberId), updateData);
+    } catch (error: any) {
       console.error(`Error updating status`, error);
       alert('Error: ' + error.message);
     }
@@ -263,6 +309,12 @@ export default function AdminMembers() {
                       placeholder="e.g., State President, General Secretary"
                     />
                   </div>
+                </div>
+              )}
+
+              {role === 'officer' && (
+                <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-3 text-xs text-emerald-800">
+                  <strong>Officer Nomination:</strong> When saved, an official Appointment Letter will be generated for {selectedMember.name} and confirmation SMS will be sent to {selectedMember.phone || 'their mobile'}.
                 </div>
               )}
 

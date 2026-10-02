@@ -46,6 +46,19 @@ export default function MyIdentityCard() {
   const idToDisplay = isOfficer ? userData.officerId : userData.memberId;
   const verificationUrl = `${window.location.origin}/verify/${userData.uid}`;
 
+  const formatCardDate = (dateVal: any, fallback = 'N/A') => {
+    if (!dateVal) return fallback;
+    try {
+      const d = typeof dateVal === 'object' && dateVal.toDate ? dateVal.toDate() : new Date(dateVal);
+      if (isNaN(d.getTime())) return fallback;
+      return d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }).replace(/ /g, '-');
+    } catch {
+      return fallback;
+    }
+  };
+
+  const cardIssueDate = userData.issueDate || userData.cardIssueDate || userData.approvedAt || (isOfficer && userData.officerAppointmentDate ? userData.officerAppointmentDate : null) || userData.joiningDate;
+
   const handlePrint = () => {
     window.print();
   };
@@ -212,13 +225,13 @@ export default function MyIdentityCard() {
                 <div>
                   <span className="block text-[11px] font-medium text-slate-500 mb-0.5">Issue Date</span>
                   <span className="text-[14px] font-bold text-slate-900">
-                    {userData.joiningDate ? new Date(userData.joiningDate).toLocaleDateString('en-GB', {day: '2-digit', month: 'short', year: 'numeric'}).replace(/ /g, '-') : 'N/A'}
+                    {formatCardDate(cardIssueDate)}
                   </span>
                 </div>
                 <div>
                   <span className="block text-[11px] font-medium text-slate-500 mb-0.5">Valid Until</span>
                   <span className="text-[14px] font-bold text-slate-900">
-                    {userData.validUntil ? new Date(userData.validUntil).toLocaleDateString('en-GB', {day: '2-digit', month: 'short', year: 'numeric'}).replace(/ /g, '-') : 'Until Revoked'}
+                    {formatCardDate(userData.validUntil, 'Until Revoked')}
                   </span>
                 </div>
               </div>
@@ -236,7 +249,7 @@ export default function MyIdentityCard() {
                 </div>
                 <div className="border-b-[1.5px] border-slate-800 w-[140px] mb-1.5"></div>
                 <p className="text-[13px] font-bold text-slate-900 leading-tight">Gulfam Siddique</p>
-                <p className="text-[11px] font-medium text-slate-700 leading-tight">Founder & Chairman</p>
+                <p className="text-[11px] font-medium text-slate-700 leading-tight">Founder & Chief Secretary</p>
                 <p className="text-[9px] text-slate-600 mt-2">(Contact for MSS): info@manavsamanta.org</p>
               </div>
             </div>

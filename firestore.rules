@@ -122,6 +122,13 @@ service cloud.firestore {
       allow delete: if isAdmin() || isSuperAdminEmail();
     }
 
+    match /appointment_letters/{letterId} {
+      // Verifiable by QR code or direct dashboard read
+      allow read: if true;
+      // Only administrators can create, update, or revoke appointment letters
+      allow write, create, update, delete: if isAdmin() || isSuperAdminEmail();
+    }
+
     match /{document=**} {
       // Fallback for development, secure this later
       allow read, write: if isAdmin() || isSuperAdminEmail();

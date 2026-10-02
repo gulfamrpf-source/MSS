@@ -45,6 +45,19 @@ export default function IdentityCardVerification() {
   const isValid = userData && userData.status === 'active' && (userData.role === 'member' || userData.role === 'officer' || userData.role === 'admin');
   const isOfficer = userData?.role === 'officer' || userData?.role === 'admin';
 
+  const formatVerificationDate = (dateVal: any, fallback = 'N/A') => {
+    if (!dateVal) return fallback;
+    try {
+      const d = typeof dateVal === 'object' && dateVal.toDate ? dateVal.toDate() : new Date(dateVal);
+      if (isNaN(d.getTime())) return fallback;
+      return d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }).replace(/ /g, '-');
+    } catch {
+      return fallback;
+    }
+  };
+
+  const cardIssueDate = userData ? (userData.issueDate || userData.cardIssueDate || userData.approvedAt || (isOfficer && userData.officerAppointmentDate ? userData.officerAppointmentDate : null) || userData.joiningDate) : null;
+
   return (
     <div className="min-h-screen bg-slate-50 py-12 px-4 flex flex-col items-center font-sans">
       <div className="flex flex-col items-center mb-8">
@@ -111,11 +124,11 @@ export default function IdentityCardVerification() {
               </div>
               <div className="flex justify-between py-2 border-b border-slate-100">
                 <span className="text-slate-500 text-sm">Issue Date</span>
-                <span className="font-bold text-slate-900">{userData.joiningDate ? new Date(userData.joiningDate).toLocaleDateString() : 'N/A'}</span>
+                <span className="font-bold text-slate-900">{formatVerificationDate(cardIssueDate)}</span>
               </div>
               <div className="flex justify-between py-2 border-b border-slate-100">
                 <span className="text-slate-500 text-sm">Valid Until</span>
-                <span className="font-bold text-slate-900">{userData.validUntil ? new Date(userData.validUntil).toLocaleDateString() : 'Until Revoked'}</span>
+                <span className="font-bold text-slate-900">{formatVerificationDate(userData.validUntil, 'Until Revoked')}</span>
               </div>
             </div>
             

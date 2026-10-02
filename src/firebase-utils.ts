@@ -22,7 +22,7 @@ export interface FounderData {
 
 export const defaultFounderData: FounderData = {
   name: "Gulfam Siddique",
-  designation: "Founder & CEO",
+  designation: "Founder & Chief Secretary",
   biography: "हमारा उद्देश्य केवल सहायता प्रदान करना नहीं, बल्कि समाज के प्रत्येक व्यक्ति को समान अवसर, सम्मान और गरिमापूर्ण जीवन का अधिकार दिलाने की दिशा में निरंतर कार्य करना है।",
   message: "समानता, मानवता और सामाजिक जिम्मेदारी हमारे संगठन के मूल आधार हैं। हमारा प्रयास है कि समाज के हर वर्ग तक अवसर, जागरूकता और सहयोग पहुँचाया जाए तथा एक अधिक न्यायपूर्ण, समावेशी और संवेदनशील समाज का निर्माण किया जा सके।",
   linkedinUrl: "#",

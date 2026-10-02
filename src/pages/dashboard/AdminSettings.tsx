@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { doc, getDoc, setDoc, updateDoc } from 'firebase/firestore';
 import { db } from '../../firebase';
-import { Settings, Save, Loader2, Upload, Plus, Trash2 } from 'lucide-react';
+import { Settings, Save, Loader2, Upload, Plus, Trash2, CheckCircle2, AlertTriangle, FileText, Phone, Send } from 'lucide-react';
 import { compressImage } from '../../utils/imageUtils';
 import { uploadImage, defaultFounderData } from '../../firebase-utils';
 
@@ -23,6 +23,18 @@ export default function AdminSettings() {
   const [saving, setSaving] = useState(false);
   const [uploadingLogo, setUploadingLogo] = useState(false);
   const [uploadingHeaderBg, setUploadingHeaderBg] = useState(false);
+  
+  // Letterhead & SMS Gateway State
+  const [letterheadSettings, setLetterheadSettings] = useState<any>({ letterheadUrl: null, active: true });
+  const [uploadingLetterhead, setUploadingLetterhead] = useState(false);
+  const [smsConfig, setSmsConfig] = useState<any>({ configured: false, provider: 'FAST2SMS', senderId: 'MSSNGO', maskedApiKey: '' });
+  const [smsProvider, setSmsProvider] = useState('FAST2SMS');
+  const [smsApiKey, setSmsApiKey] = useState('');
+  const [smsSenderId, setSmsSenderId] = useState('MSSNGO');
+  const [savingSms, setSavingSms] = useState(false);
+  const [testPhone, setTestPhone] = useState('');
+  const [testingSms, setTestingSms] = useState(false);
+  const [testSmsStatus, setTestSmsStatus] = useState<any>(null);
 
   useEffect(() => {
     async function fetchSettings() {
@@ -54,6 +66,23 @@ export default function AdminSettings() {
             biography: data.biography ? data.biography : defaultFounderData.biography,
             designation: data.designation ? data.designation : defaultFounderData.designation
           });
+        }
+
+        // Fetch letterhead
+        const lhSnap = await getDoc(doc(db, 'settings', 'letterhead'));
+        if (lhSnap.exists()) {
+          setLetterheadSettings(lhSnap.data());
+        }
+
+        // Fetch SMS config status from server
+        try {
+          const smsRes = await fetch('/api/admin/config/sms');
+          const smsData = await smsRes.json();
+          setSmsConfig(smsData);
+          if (smsData.provider) setSmsProvider(smsData.provider);
+          if (smsData.senderId) setSmsSenderId(smsData.senderId);
+        } catch (e) {
+          console.warn("Could not check SMS config:", e);
         }
       } catch (error) {
         console.error("Error fetching settings", error);
@@ -580,6 +609,269 @@ export default function AdminSettings() {
                 </button>
               </div>
             ))}
+          </div>
+        </div>
+
+        {/* Official Letterhead Management Section */}
+        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 space-y-4">
+          <div className="flex justify-between items-center border-b border-slate-100 pb-2">
+            <div>
+              <h2 className="text-lg font-bold text-slate-800">Official Letterhead Management</h2>
+              <p className="text-xs text-slate-500 mt-0.5">Upload, preview, and manage the official letterhead background for all officer appointment letters.</p>
+            </div>
+            {letterheadSettings.letterheadUrl ? (
+              <span className="text-xs font-semibold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-full flex items-center gap-1">
+                <CheckCircle2 className="w-3.5 h-3.5" /> Custom Letterhead Active
+              </span>
+            ) : (
+              <span className="text-xs font-semibold text-slate-600 bg-slate-100 px-2.5 py-1 rounded-full">
+                Default MSS Letterhead Active
+              </span>
+            )}
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start pt-2">
+            <div>
+              <label className="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-2">Upload Letterhead (PNG, JPG, or PDF)</label>
+              <div className="relative">
+                <input
+                  type="file"
+                  accept="image/png, image/jpeg, image/jpg, application/pdf"
+                  disabled={uploadingLetterhead}
+                  onChange={async (e) => {
+                    const file = e.target.files?.[0];
+                    if (!file) return;
+                    setUploadingLetterhead(true);
+                    try {
+                      let finalBase64 = '';
+                      if (file.type.startsWith('image/')) {
+                        finalBase64 = await compressImage(file, 1600, "image/png", 0.92);
+                      } else {
+                        finalBase64 = await new Promise((resolve, reject) => {
+                          const reader = new FileReader();
+                          reader.onload = () => resolve(reader.result as string);
+                          reader.onerror = reject;
+                          reader.readAsDataURL(file);
+                        });
+                      }
+
+                      const updatedData = {
+                        letterheadUrl: finalBase64,
+                        uploadedAt: new Date().toISOString(),
+                        fileName: file.name,
+                        fileSize: file.size,
+                        active: true,
+                        updatedAt: new Date().toISOString()
+                      };
+
+                      await setDoc(doc(db, 'settings', 'letterhead'), updatedData, { merge: true });
+                      setLetterheadSettings(updatedData);
+                      alert('Letterhead updated successfully! All future appointment letters will use this background.');
+                    } catch (err: any) {
+                      alert('Error uploading letterhead: ' + err.message);
+                    } finally {
+                      setUploadingLetterhead(false);
+                    }
+                  }}
+                  className="block w-full text-sm text-slate-500
+                    file:mr-4 file:py-2.5 file:px-4
+                    file:rounded-xl file:border-0
+                    file:text-sm file:font-semibold
+                    file:bg-emerald-50 file:text-emerald-700
+                    hover:file:bg-emerald-100
+                    cursor-pointer border border-slate-200 rounded-xl p-1"
+                />
+                {uploadingLetterhead && (
+                  <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                    <Loader2 className="w-5 h-5 animate-spin text-emerald-600" />
+                  </div>
+                )}
+              </div>
+              <p className="text-xs text-slate-400 mt-2">
+                This letterhead template will be used for generating official, print-ready appointment letters.
+              </p>
+              {letterheadSettings.letterheadUrl && (
+                <button
+                  type="button"
+                  onClick={async () => {
+                    if (!window.confirm("Reset to default MSS official letterhead?")) return;
+                    await updateDoc(doc(db, 'settings', 'letterhead'), { letterheadUrl: null, active: false });
+                    setLetterheadSettings((prev: any) => ({ ...prev, letterheadUrl: null, active: false }));
+                    alert("Reset to default MSS letterhead.");
+                  }}
+                  className="mt-3 text-xs text-rose-600 hover:text-rose-700 font-semibold flex items-center gap-1"
+                >
+                  <Trash2 className="w-3.5 h-3.5" /> Remove Custom Letterhead & Use Default
+                </button>
+              )}
+            </div>
+
+            <div className="bg-slate-50 p-3 rounded-xl border border-slate-200 text-center">
+              <span className="text-xs font-semibold text-slate-500 block mb-2">Letterhead Preview</span>
+              {letterheadSettings.letterheadUrl ? (
+                <img
+                  src={letterheadSettings.letterheadUrl}
+                  alt="Letterhead Preview"
+                  className="w-full max-h-48 object-contain rounded-lg border border-slate-300 mx-auto"
+                />
+              ) : (
+                <div className="py-8 text-center text-slate-400">
+                  <FileText className="w-10 h-10 mx-auto mb-1 text-slate-300" />
+                  <p className="text-xs font-medium text-slate-600">Default Built-in MSS Letterhead</p>
+                  <p className="text-[11px] text-slate-400">Includes MSS Golden & Emerald Banner, Reg. No., Motto & Logo</p>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* SMS Gateway Configuration Section */}
+        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 space-y-4">
+          <div className="flex justify-between items-center border-b border-slate-100 pb-2">
+            <div>
+              <h2 className="text-lg font-bold text-slate-800">Mobile SMS Gateway Configuration</h2>
+              <p className="text-xs text-slate-500 mt-0.5">Automate live SMS appointment notifications whenever an officer is nominated.</p>
+            </div>
+            {smsConfig.configured ? (
+              <span className="text-xs font-semibold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-full flex items-center gap-1">
+                <CheckCircle2 className="w-3.5 h-3.5" /> Active Gateway ({smsConfig.provider})
+              </span>
+            ) : (
+              <span className="text-xs font-semibold text-amber-700 bg-amber-50 px-2.5 py-1 rounded-full flex items-center gap-1">
+                <AlertTriangle className="w-3.5 h-3.5" /> Setup Required
+              </span>
+            )}
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
+            <div className="space-y-3">
+              <div>
+                <label className="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-1">Provider</label>
+                <select
+                  value={smsProvider}
+                  onChange={(e) => setSmsProvider(e.target.value)}
+                  className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                >
+                  <option value="FAST2SMS">Fast2SMS (Recommended for India - Quick/Instant Route)</option>
+                  <option value="TWILIO">Twilio</option>
+                  <option value="CUSTOM_WEBHOOK">Custom HTTP Webhook / MSG91</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-1">
+                  API Key / Authorization Token
+                </label>
+                <input
+                  type="password"
+                  placeholder={smsConfig.maskedApiKey ? `Current: ${smsConfig.maskedApiKey} (Leave blank to keep)` : "Enter Fast2SMS API Key"}
+                  value={smsApiKey}
+                  onChange={(e) => setSmsApiKey(e.target.value)}
+                  className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-emerald-500 font-mono"
+                />
+                <span className="text-[11px] text-slate-400 mt-1 block">
+                  Keys are stored safely on the server and never exposed in client bundles.
+                </span>
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-1">Sender Brand ID</label>
+                <input
+                  type="text"
+                  placeholder="e.g. MSSNGO"
+                  value={smsSenderId}
+                  onChange={(e) => setSmsSenderId(e.target.value)}
+                  className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                />
+              </div>
+
+              <button
+                type="button"
+                disabled={savingSms}
+                onClick={async () => {
+                  setSavingSms(true);
+                  try {
+                    const res = await fetch('/api/admin/config/sms', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({
+                        provider: smsProvider,
+                        apiKey: smsApiKey,
+                        senderId: smsSenderId
+                      })
+                    });
+                    const d = await res.json();
+                    if (d.success) {
+                      alert('SMS Gateway configuration saved!');
+                      setSmsConfig((prev: any) => ({
+                        ...prev,
+                        configured: true,
+                        provider: smsProvider,
+                        senderId: smsSenderId,
+                        maskedApiKey: smsApiKey ? '••••••••' + smsApiKey.slice(-4) : prev.maskedApiKey
+                      }));
+                      setSmsApiKey('');
+                    } else {
+                      alert(d.error || 'Failed to save SMS config');
+                    }
+                  } catch (err: any) {
+                    alert('Error saving SMS config: ' + err.message);
+                  } finally {
+                    setSavingSms(false);
+                  }
+                }}
+                className="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 text-sm font-semibold transition-colors disabled:opacity-50"
+              >
+                {savingSms ? 'Saving Gateway...' : 'Save SMS Gateway Settings'}
+              </button>
+            </div>
+
+            {/* Test Connection Box */}
+            <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-3">
+              <h4 className="text-xs font-bold text-slate-700 uppercase tracking-wider">Test SMS Gateway Connectivity</h4>
+              <p className="text-xs text-slate-500">Send an instant test notification to verify your credentials with the telecom gateway.</p>
+              
+              <div className="flex gap-2">
+                <input
+                  type="tel"
+                  placeholder="10-digit phone number"
+                  value={testPhone}
+                  onChange={(e) => setTestPhone(e.target.value.replace(/\D/g, ''))}
+                  className="flex-1 px-3 py-2 text-sm bg-white border border-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                />
+                <button
+                  type="button"
+                  disabled={testingSms || !testPhone}
+                  onClick={async () => {
+                    setTestingSms(true);
+                    setTestSmsStatus(null);
+                    try {
+                      const res = await fetch('/api/test-sms', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ to: testPhone })
+                      });
+                      const d = await res.json();
+                      setTestSmsStatus(d);
+                    } catch (err: any) {
+                      setTestSmsStatus({ success: false, error: err.message });
+                    } finally {
+                      setTestingSms(false);
+                    }
+                  }}
+                  className="px-3.5 py-2 bg-slate-800 hover:bg-slate-900 text-white text-xs font-semibold rounded-lg transition-colors disabled:opacity-50 flex items-center gap-1.5"
+                >
+                  {testingSms ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />}
+                  Send Test
+                </button>
+              </div>
+
+              {testSmsStatus && (
+                <div className={`p-3 rounded-lg text-xs ${testSmsStatus.success ? 'bg-emerald-50 text-emerald-800 border border-emerald-200' : 'bg-rose-50 text-rose-800 border border-rose-200'}`}>
+                  <strong>{testSmsStatus.success ? '✓ Delivery Successful:' : '✗ Delivery Failed:'}</strong> {testSmsStatus.message || testSmsStatus.error}
+                </div>
+              )}
+            </div>
           </div>
         </div>
 

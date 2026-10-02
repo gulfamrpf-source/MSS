@@ -57,10 +57,13 @@ export default function AdminIdManagement() {
       
       try {
           await updateDoc(doc(db, 'users', userId), {
+              issueDate: issueDate.toISOString(),
+              cardIssueDate: issueDate.toISOString(),
+              joiningDate: issueDate.toISOString(),
               validUntil: expiryDate.toISOString(),
               status: 'active'
           });
-          alert('Validity renewed for 1 year and status set to Active.');
+          alert('Validity renewed for 1 year and Issue Date updated to today.');
       } catch (err) {
           alert('Error renewing validity.');
       }
@@ -121,7 +124,10 @@ export default function AdminIdManagement() {
                       {!user.memberId && !user.officerId && 'N/A'}
                     </td>
                     <td className="px-6 py-4 text-xs text-slate-600">
-                        {user.validUntil ? new Date(user.validUntil).toLocaleDateString() : 'N/A'}
+                        <div className="flex flex-col gap-0.5">
+                          <span><span className="text-slate-400 font-medium">Issued:</span> {user.issueDate || user.cardIssueDate || user.approvedAt || user.joiningDate ? new Date(user.issueDate || user.cardIssueDate || user.approvedAt || user.joiningDate).toLocaleDateString('en-GB', {day: '2-digit', month: 'short', year: 'numeric'}) : 'N/A'}</span>
+                          <span><span className="text-slate-400 font-medium">Valid:</span> {user.validUntil ? new Date(user.validUntil).toLocaleDateString('en-GB', {day: '2-digit', month: 'short', year: 'numeric'}) : 'Until Revoked'}</span>
+                        </div>
                     </td>
                     <td className="px-6 py-4">
                       <select 

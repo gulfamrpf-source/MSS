@@ -88,6 +88,10 @@ export default function Join() {
       await setDoc(doc(db, 'users', uid), {
         uid: uid,
         name: formData.fullName,
+        fatherName: formData.fatherName,
+        dob: formData.dob,
+        gender: formData.gender,
+        bloodGroup: formData.bloodGroup,
         phone: formData.mobile,
         address: formData.address + ', ' + formData.city + ', ' + formData.district + ', ' + formData.state + ' - ' + formData.pincode,
         email: formData.email,
@@ -99,6 +103,10 @@ export default function Join() {
       const docRef = await addDoc(collection(db, 'applications'), {
         userId: uid,
         fullName: formData.fullName,
+        fatherName: formData.fatherName,
+        dob: formData.dob,
+        gender: formData.gender,
+        bloodGroup: formData.bloodGroup,
         email: formData.email,
         mobile: formData.mobile,
         address: formData.address,

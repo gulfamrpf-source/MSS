@@ -68,12 +68,17 @@ export default function DashboardLayout() {
             <NavLink to="/dashboard/identity-card" icon={CreditCard} label="My Identity Card" />
           )}
 
+          {(isOfficer || isAdmin) && (
+            <NavLink to="/dashboard/appointment-letter" icon={FileText} label="My Appointment Letter" />
+          )}
+
           {isAdmin && (
             <>
               <div className="pt-4 pb-2 px-4 text-xs font-semibold text-slate-400 uppercase tracking-wider">Admin Controls</div>
               <NavLink to="/dashboard/activities" icon={LayoutDashboard} label="Activities & Projects" />
               <NavLink to="/dashboard/applications" icon={FileText} label="Applications" />
               <NavLink to="/dashboard/members" icon={Users} label="Members & Officers" />
+              <NavLink to="/dashboard/appointment-letters" icon={FileText} label="Appointment Letters & SMS" />
               <NavLink to="/dashboard/id-management" icon={CreditCard} label="Identity Cards Management" />
               <NavLink to="/dashboard/admin-tasks" icon={Award} label="Task Allocation" />
               <NavLink to="/dashboard/messages" icon={Mail} label="Contact Messages" />

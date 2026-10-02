@@ -41,6 +41,9 @@ import AdminLogin from './pages/AdminLogin';
 import LegalPolicy from './pages/LegalPolicy';
 import IdentityCardVerification from './pages/IdentityCardVerification';
 import MyIdentityCard from './pages/dashboard/MyIdentityCard';
+import AdminAppointmentLetters from './pages/dashboard/AdminAppointmentLetters';
+import OfficerAppointmentLetter from './pages/dashboard/OfficerAppointmentLetter';
+import AppointmentLetterVerification from './pages/AppointmentLetterVerification';
 import GlobalBackground from './components/GlobalBackground';
 import Chatbot from './components/Chatbot';
 
@@ -94,6 +97,9 @@ export default function App() {
             
             {/* Legal / Policy Routes */}
             <Route path="policy/:policyId" element={<LegalPolicy />} />
+            
+            {/* Public Appointment Verification */}
+            <Route path="verify-appointment/:letterId" element={<AppointmentLetterVerification />} />
           </Route>
 
           {/* Protected Dashboard Routes */}
@@ -101,6 +107,7 @@ export default function App() {
             <Route index element={<DashboardOverview />} />
             <Route path="profile" element={<MemberProfile />} />
             <Route path="identity-card" element={<ProtectedRoute requiredRole="member"><MyIdentityCard /></ProtectedRoute>} />
+            <Route path="appointment-letter" element={<ProtectedRoute requiredRole="officer"><OfficerAppointmentLetter /></ProtectedRoute>} />
             
             {/* Officer & Member Area */}
             <Route path="tasks" element={<ProtectedRoute requiredRole="officer"><OfficerTasks /></ProtectedRoute>} />
@@ -109,6 +116,7 @@ export default function App() {
             {/* Admin Only */}
             <Route path="applications" element={<ProtectedRoute requiredRole="admin"><AdminApplications /></ProtectedRoute>} />
             <Route path="members" element={<ProtectedRoute requiredRole="admin"><AdminMembers /></ProtectedRoute>} />
+            <Route path="appointment-letters" element={<ProtectedRoute requiredRole="admin"><AdminAppointmentLetters /></ProtectedRoute>} />
             <Route path="id-management" element={<ProtectedRoute requiredRole="admin"><AdminIdManagement /></ProtectedRoute>} />
             <Route path="admin-tasks" element={<ProtectedRoute requiredRole="admin"><AdminTasks /></ProtectedRoute>} />
             <Route path="messages" element={<ProtectedRoute requiredRole="admin"><AdminMessages /></ProtectedRoute>} />
