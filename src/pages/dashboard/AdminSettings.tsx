@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { doc, getDoc, setDoc, updateDoc } from 'firebase/firestore';
 import { db } from '../../firebase';
-import { Settings, Save, Loader2, Upload, Plus, Trash2, CheckCircle2, AlertTriangle, FileText, Phone, Send } from 'lucide-react';
+import { Settings, Save, Loader2, Upload, Plus, Trash2, CheckCircle2, AlertTriangle, FileText, Phone, Send, BookOpen, ExternalLink, Download } from 'lucide-react';
 import { compressImage } from '../../utils/imageUtils';
 import { uploadImage, defaultFounderData } from '../../firebase-utils';
+import { Link } from 'react-router-dom';
 
 export default function AdminSettings() {
   const [settings, setSettings] = useState<any>({
@@ -722,6 +723,53 @@ export default function AdminSettings() {
                 </div>
               )}
             </div>
+          </div>
+        </div>
+
+        {/* Memorandum of Association Section */}
+        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 space-y-4">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b border-slate-100 pb-3">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
+                <BookOpen className="w-5 h-5" />
+              </div>
+              <div>
+                <h2 className="text-lg font-bold text-slate-800">Memorandum of Association & Rules (स्मृति-पत्र एवं विधान)</h2>
+                <p className="text-xs text-slate-500 mt-0.5">
+                  Upload your signed official PDF so members, officers, and public can read and download it anytime.
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <Link
+                to="/dashboard/memorandum"
+                className="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold transition-colors flex items-center gap-1.5 shadow-sm"
+              >
+                <Upload className="w-3.5 h-3.5" /> Manage / Upload PDF
+              </Link>
+              <Link
+                to="/memorandum"
+                target="_blank"
+                className="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-semibold transition-colors flex items-center gap-1.5"
+              >
+                <ExternalLink className="w-3.5 h-3.5" /> Public View
+              </Link>
+            </div>
+          </div>
+          <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs">
+            <div>
+              <p className="font-semibold text-slate-800">Public Document Link:</p>
+              <code className="text-emerald-700 font-mono">/memorandum</code>
+              <p className="text-slate-500 text-[11px] mt-0.5">
+                Displays the embedded PDF reader, download buttons, and constitutional summary.
+              </p>
+            </div>
+            <Link
+              to="/dashboard/memorandum"
+              className="px-4 py-2 bg-white text-emerald-800 border border-emerald-300 rounded-lg font-bold text-xs hover:bg-emerald-50 transition-colors shadow-2xs"
+            >
+              Open Memorandum Manager →
+            </Link>
           </div>
         </div>
 

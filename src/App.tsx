@@ -44,6 +44,8 @@ import MyIdentityCard from './pages/dashboard/MyIdentityCard';
 import AdminAppointmentLetters from './pages/dashboard/AdminAppointmentLetters';
 import OfficerAppointmentLetter from './pages/dashboard/OfficerAppointmentLetter';
 import AppointmentLetterVerification from './pages/AppointmentLetterVerification';
+import PublicMemorandum from './pages/PublicMemorandum';
+import AdminMemorandum from './pages/dashboard/AdminMemorandum';
 import GlobalBackground from './components/GlobalBackground';
 import Chatbot from './components/Chatbot';
 
@@ -94,6 +96,9 @@ export default function App() {
             <Route path="volunteer" element={<PublicContentView type="volunteer" title="Volunteer Program" subtitle="Become a volunteer and dedicate your time for the greater good." />} />
             <Route path="partner" element={<PublicContentView type="partner" title="Partner With Us" subtitle="Collaborate with us to amplify our impact." />} />
             <Route path="policies" element={<PublicPolicies />} />
+            <Route path="memorandum" element={<PublicMemorandum />} />
+            <Route path="moa" element={<PublicMemorandum />} />
+            <Route path="constitution" element={<PublicMemorandum />} />
             
             {/* Legal / Policy Routes */}
             <Route path="policy/:policyId" element={<LegalPolicy />} />
@@ -124,6 +129,7 @@ export default function App() {
             <Route path="activities" element={<ProtectedRoute requiredRole="admin"><AdminActivities /></ProtectedRoute>} />
             <Route path="activities/new" element={<ProtectedRoute requiredRole="admin"><AdminActivityForm /></ProtectedRoute>} />
             <Route path="activities/edit/:id" element={<ProtectedRoute requiredRole="admin"><AdminActivityForm /></ProtectedRoute>} />
+            <Route path="memorandum" element={<ProtectedRoute requiredRole="admin"><AdminMemorandum /></ProtectedRoute>} />
             <Route path="settings" element={<ProtectedRoute requiredRole="admin"><AdminSettings /></ProtectedRoute>} />
           </Route>
         </Routes>

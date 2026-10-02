@@ -44,7 +44,104 @@ async function startServer() {
   const app = express();
   const PORT = 3000;
 
-  app.use(express.json());
+  app.use(express.json({ limit: "50mb" }));
+  app.use(express.urlencoded({ limit: "50mb", extended: true }));
+
+  // -------------------------------------------------------------
+  // Memorandum of Association (MoA) PDF Endpoints
+  // -------------------------------------------------------------
+  const uploadsDir = path.join(process.cwd(), 'public', 'uploads');
+  if (!fs.existsSync(uploadsDir)) {
+    fs.mkdirSync(uploadsDir, { recursive: true });
+  }
+
+  // Upload Memorandum PDF
+  app.post("/api/memorandum/upload", (req, res) => {
+    try {
+      const { pdfBase64, fileName, title, description } = req.body;
+      if (!pdfBase64) {
+        return res.status(400).json({ error: "No PDF content provided" });
+      }
+
+      // Strip potential base64 prefix
+      const base64Data = pdfBase64.replace(/^data:application\/pdf;base64,/, "");
+      const buffer = Buffer.from(base64Data, "base64");
+
+      const targetPath = path.join(uploadsDir, "memorandum.pdf");
+      fs.writeFileSync(targetPath, buffer);
+
+      const stats = fs.statSync(targetPath);
+
+      res.json({
+        success: true,
+        fileUrl: "/api/memorandum/file",
+        downloadUrl: "/api/memorandum/download",
+        staticUrl: "/uploads/memorandum.pdf",
+        fileName: fileName || "MSS_Memorandum_of_Association.pdf",
+        fileSize: stats.size,
+        uploadedAt: new Date().toISOString(),
+        title: title || "मानव समानता संगठन स्मृति-पत्र एवं नियमावली (MoA & Rules)",
+        description: description || "Official Memorandum of Association & Bylaws of Manav Samanta Sangthan"
+      });
+    } catch (err: any) {
+      console.error("Error saving memorandum PDF:", err);
+      res.status(500).json({ error: "Failed to save memorandum PDF: " + err.message });
+    }
+  });
+
+  // Check Memorandum status
+  app.get("/api/memorandum/status", (req, res) => {
+    const targetPath = path.join(uploadsDir, "memorandum.pdf");
+    if (fs.existsSync(targetPath)) {
+      const stats = fs.statSync(targetPath);
+      res.json({
+        exists: true,
+        fileUrl: "/api/memorandum/file",
+        downloadUrl: "/api/memorandum/download",
+        staticUrl: "/uploads/memorandum.pdf",
+        fileSize: stats.size,
+        updatedAt: stats.mtime.toISOString(),
+        fileName: "MSS_Memorandum_of_Association.pdf"
+      });
+    } else {
+      res.json({ exists: false, fileUrl: null });
+    }
+  });
+
+  // Stream Memorandum PDF inline (for viewer only)
+  app.get("/api/memorandum/file", (req, res) => {
+    const targetPath = path.join(uploadsDir, "memorandum.pdf");
+    if (fs.existsSync(targetPath)) {
+      res.setHeader("Content-Type", "application/pdf");
+      res.setHeader("Content-Disposition", 'inline; filename="MSS_Memorandum.pdf"');
+      res.setHeader("X-Content-Type-Options", "nosniff");
+      res.setHeader("Cache-Control", "private, no-transform");
+      const stream = fs.createReadStream(targetPath);
+      stream.pipe(res);
+    } else {
+      res.status(404).json({ error: "Memorandum PDF not found on server" });
+    }
+  });
+
+  // Download Memorandum PDF is disabled (View-only protection)
+  app.get("/api/memorandum/download", (req, res) => {
+    res.status(403).json({
+      error: "Download is disabled for this official document. It is available for online reading only."
+    });
+  });
+
+  // Delete Memorandum PDF
+  app.delete("/api/memorandum", (req, res) => {
+    try {
+      const targetPath = path.join(uploadsDir, "memorandum.pdf");
+      if (fs.existsSync(targetPath)) {
+        fs.unlinkSync(targetPath);
+      }
+      res.json({ success: true, message: "Memorandum removed" });
+    } catch (err: any) {
+      res.status(500).json({ error: "Failed to remove memorandum: " + err.message });
+    }
+  });
 
   // Razorpay instance
   let razorpay: any = null;

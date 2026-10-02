@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Outlet, Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { Heart, LayoutDashboard, Users, UserPlus, LogOut, ShieldCheck, FileText, Settings, Award, Mail, CreditCard , Globe } from 'lucide-react';
+import { Heart, LayoutDashboard, Users, UserPlus, LogOut, ShieldCheck, FileText, Settings, Award, Mail, CreditCard, Globe, BookOpen } from 'lucide-react';
 import { doc, onSnapshot } from 'firebase/firestore';
 import { db } from '../firebase';
 
@@ -72,6 +72,8 @@ export default function DashboardLayout() {
             <NavLink to="/dashboard/appointment-letter" icon={FileText} label="My Appointment Letter" />
           )}
 
+          <NavLink to="/memorandum" icon={BookOpen} label="Memorandum / विधान" />
+
           {isAdmin && (
             <>
               <div className="pt-4 pb-2 px-4 text-xs font-semibold text-slate-400 uppercase tracking-wider">Admin Controls</div>
@@ -79,6 +81,7 @@ export default function DashboardLayout() {
               <NavLink to="/dashboard/applications" icon={FileText} label="Applications" />
               <NavLink to="/dashboard/members" icon={Users} label="Members & Officers" />
               <NavLink to="/dashboard/appointment-letters" icon={FileText} label="Appointment Letters & SMS" />
+              <NavLink to="/dashboard/memorandum" icon={BookOpen} label="Memorandum (स्मृति-पत्र)" />
               <NavLink to="/dashboard/id-management" icon={CreditCard} label="Identity Cards Management" />
               <NavLink to="/dashboard/admin-tasks" icon={Award} label="Task Allocation" />
               <NavLink to="/dashboard/messages" icon={Mail} label="Contact Messages" />
