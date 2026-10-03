@@ -42,7 +42,7 @@ export default function PublicMemorandum() {
     return () => unsub();
   }, []);
 
-  const pdfUrl = memorandumData?.fileUrl || (serverPdfAvailable ? '/api/memorandum/file' : null);
+  const pdfUrl = serverPdfAvailable ? (memorandumData?.fileUrl || '/api/memorandum/file') : null;
 
   const handleShare = () => {
     if (navigator.clipboard) {

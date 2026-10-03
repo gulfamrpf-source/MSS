@@ -36,6 +36,11 @@ export default function SecurePdfViewer({
   // Load PDF Document
   useEffect(() => {
     let isCancelled = false;
+    if (!url) {
+      setLoading(false);
+      return;
+    }
+
     setLoading(true);
     setError(null);
 
@@ -55,7 +60,7 @@ export default function SecurePdfViewer({
       })
       .catch((err: any) => {
         if (!isCancelled) {
-          console.error("PDF.js loading error:", err);
+          console.warn("SecurePdfViewer notice:", err?.message || err);
           setError("दस्तावेज़ लोड करने में समस्या आई। कृपया पुनः प्रयास करें।");
           setLoading(false);
         }

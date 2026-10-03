@@ -39,6 +39,145 @@ import path from "path";
 import { createServer as createViteServer } from "vite";
 import Razorpay from "razorpay";
 import crypto from "crypto";
+import { jsPDF } from "jspdf";
+
+function ensureDefaultMemorandumPdf(targetPath: string) {
+  if (fs.existsSync(targetPath)) return;
+  try {
+    const parentDir = path.dirname(targetPath);
+    if (!fs.existsSync(parentDir)) {
+      fs.mkdirSync(parentDir, { recursive: true });
+    }
+
+    const doc = new jsPDF({
+      orientation: "portrait",
+      unit: "mm",
+      format: "a4"
+    });
+
+    // Page 1 Header Banner
+    doc.setFillColor(20, 72, 55); // Emerald #144837
+    doc.rect(0, 0, 210, 36, "F");
+
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(18);
+    doc.setFont("helvetica", "bold");
+    doc.text("MANAV SAMANTA SANGTHAN", 105, 14, { align: "center" });
+
+    doc.setFontSize(10);
+    doc.setFont("helvetica", "normal");
+    doc.text("Registered Under Societies Registration Act XXI of 1860 | Reg: MSS/2024/7821", 105, 22, { align: "center" });
+    doc.text('"Pehle Insaan, Phir Dharm" - Humanity First, Then Religion', 105, 28, { align: "center" });
+
+    // Decorative Line
+    doc.setDrawColor(217, 119, 6);
+    doc.setLineWidth(1.2);
+    doc.line(15, 42, 195, 42);
+
+    doc.setTextColor(20, 72, 55);
+    doc.setFontSize(15);
+    doc.setFont("helvetica", "bold");
+    doc.text("MEMORANDUM OF ASSOCIATION & RULES (MoA)", 105, 52, { align: "center" });
+
+    doc.setFontSize(10);
+    doc.setTextColor(80, 80, 80);
+    doc.setFont("helvetica", "italic");
+    doc.text("Official Constitutional Charter and Bylaws", 105, 58, { align: "center" });
+
+    // Section 1
+    doc.setFont("helvetica", "bold");
+    doc.setTextColor(20, 72, 55);
+    doc.setFontSize(11);
+    doc.text("1. NAME OF THE ORGANIZATION", 20, 68);
+    doc.setFont("helvetica", "normal");
+    doc.setTextColor(50, 50, 50);
+    doc.setFontSize(9.5);
+    doc.text('The name of the Society shall be "MANAV SAMANTA SANGTHAN" (मानव समानता संगठन).', 25, 74);
+
+    // Section 2
+    doc.setFont("helvetica", "bold");
+    doc.setTextColor(20, 72, 55);
+    doc.setFontSize(11);
+    doc.text("2. REGISTERED OFFICE & JURISDICTION", 20, 84);
+    doc.setFont("helvetica", "normal");
+    doc.setTextColor(50, 50, 50);
+    doc.setFontSize(9.5);
+    doc.text("The Registered Office is situated at Meerut / Delhi NCR, India.", 25, 90);
+    doc.text("The area of operation and jurisdiction shall extend throughout the territory of India.", 25, 95);
+
+    // Section 3
+    doc.setFont("helvetica", "bold");
+    doc.setTextColor(20, 72, 55);
+    doc.setFontSize(11);
+    doc.text("3. AIMS AND OBJECTS (उद्देश्य एवं लक्ष्य)", 20, 105);
+    doc.setFont("helvetica", "normal");
+    doc.setTextColor(50, 50, 50);
+    doc.setFontSize(9.5);
+
+    const aims = [
+      "a) To promote human brotherhood, equality, and compassion irrespective of caste, religion, or gender.",
+      "b) To assist underprivileged children, orphans, and students through education and vocational training.",
+      "c) To organize free medical camps, blood donation drives, and ambulance assistance for the needy.",
+      "d) To empower marginalized women and widows through skill development and social security programs.",
+      "e) To foster national integration, communal harmony, social justice, and constitutional awareness.",
+      "f) To provide emergency relief during natural calamities, disasters, or societal crises.",
+      "g) To establish community care centers, libraries, and legal awareness assistance forums."
+    ];
+
+    let yPos = 112;
+    for (const aim of aims) {
+      doc.text(aim, 25, yPos);
+      yPos += 6.5;
+    }
+
+    // Section 4
+    doc.setFont("helvetica", "bold");
+    doc.setTextColor(20, 72, 55);
+    doc.setFontSize(11);
+    doc.text("4. GOVERNING BODY & MANAGEMENT", 20, yPos + 6);
+    doc.setFont("helvetica", "normal");
+    doc.setTextColor(50, 50, 50);
+    doc.setFontSize(9.5);
+    doc.text("The management and administration of the Society shall be vested in the Governing Body,", 25, yPos + 12);
+    doc.text("headed by the Founder & CEO, National President, General Secretary, and elected executive members.", 25, yPos + 17);
+
+    // Section 5
+    doc.setFont("helvetica", "bold");
+    doc.setTextColor(20, 72, 55);
+    doc.setFontSize(11);
+    doc.text("5. MEMBERSHIP RULES & ETHICAL CODE", 20, yPos + 27);
+    doc.setFont("helvetica", "normal");
+    doc.setTextColor(50, 50, 50);
+    doc.setFontSize(9.5);
+    doc.text("Any citizen of India aged 18 years or above who pledges allegiance to the ideals of equality and", 25, yPos + 33);
+    doc.text("humanitarian welfare may apply for membership subject to approval by the central executive council.", 25, yPos + 38);
+
+    // Footer Box
+    doc.setFillColor(245, 247, 246);
+    doc.rect(20, 248, 170, 32, "F");
+    doc.setDrawColor(20, 72, 55);
+    doc.setLineWidth(0.5);
+    doc.rect(20, 248, 170, 32, "S");
+
+    doc.setFontSize(9);
+    doc.setTextColor(20, 72, 55);
+    doc.setFont("helvetica", "bold");
+    doc.text("OFFICIAL SEAL & ATTESTATION", 105, 254, { align: "center" });
+    doc.setFont("helvetica", "normal");
+    doc.setTextColor(80, 80, 80);
+    doc.text("Issued under the seal of Manav Samanta Sangthan (Regd.)", 105, 260, { align: "center" });
+    doc.text("Founder & CEO: Gulfam Siddique | Headquarters: Meerut, UP, India", 105, 266, { align: "center" });
+    doc.setFont("helvetica", "italic");
+    doc.setTextColor(150, 100, 20);
+    doc.text("Certified Constitutional Document - Protected for Online Public Reading", 105, 273, { align: "center" });
+
+    const arrayBuffer = doc.output("arraybuffer");
+    fs.writeFileSync(targetPath, Buffer.from(arrayBuffer));
+    console.log("Default official Memorandum PDF created successfully at", targetPath);
+  } catch (e) {
+    console.error("Error creating default memorandum PDF:", e);
+  }
+}
 
 async function startServer() {
   const app = express();
@@ -54,6 +193,8 @@ async function startServer() {
   if (!fs.existsSync(uploadsDir)) {
     fs.mkdirSync(uploadsDir, { recursive: true });
   }
+  const defaultPdfPath = path.join(uploadsDir, "memorandum.pdf");
+  ensureDefaultMemorandumPdf(defaultPdfPath);
 
   // Upload Memorandum PDF
   app.post("/api/memorandum/upload", (req, res) => {
@@ -92,6 +233,9 @@ async function startServer() {
   // Check Memorandum status
   app.get("/api/memorandum/status", (req, res) => {
     const targetPath = path.join(uploadsDir, "memorandum.pdf");
+    if (!fs.existsSync(targetPath)) {
+      ensureDefaultMemorandumPdf(targetPath);
+    }
     if (fs.existsSync(targetPath)) {
       const stats = fs.statSync(targetPath);
       res.json({
@@ -111,6 +255,9 @@ async function startServer() {
   // Stream Memorandum PDF inline (for viewer only)
   app.get("/api/memorandum/file", (req, res) => {
     const targetPath = path.join(uploadsDir, "memorandum.pdf");
+    if (!fs.existsSync(targetPath)) {
+      ensureDefaultMemorandumPdf(targetPath);
+    }
     if (fs.existsSync(targetPath)) {
       res.setHeader("Content-Type", "application/pdf");
       res.setHeader("Content-Disposition", 'inline; filename="MSS_Memorandum.pdf"');

@@ -44,6 +44,11 @@ export default function AdminMemorandum() {
             uploadedAt: sData.updatedAt || prev.uploadedAt,
             fileName: sData.fileName || prev.fileName
           }));
+        } else {
+          setMemorandumData((prev: any) => ({
+            ...prev,
+            fileUrl: null
+          }));
         }
       } catch (err) {
         console.error("Error loading memorandum settings:", err);
